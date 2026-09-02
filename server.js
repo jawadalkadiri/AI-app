@@ -1,5 +1,4 @@
 require("dotenv").config();
-
 const express = require('express');
 const app = express();
 app.use(express.json());
@@ -7,52 +6,12 @@ const cors = require('cors');
 app.use(cors());
 const port = process.env.PORT || 3000;
 
-const Groq = require("groq-sdk");
+const aiRoutes = require('./routes/aiRoutes');
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY
-});
+app.use('/api/ai', aiRoutes);
 
-app.post('/api/ai/chat', async (req, res) => {
-    const { cv, jobDescription } = req.body;
 
-    if (!cv || !jobDescription) {
-        return res.status(400).json({ error: "CV and job description are required" });
-    }
 
-try {
-    const response = await groq.chat.completions.create({
-        messages: [
-            {
-                role: "system",
-                content: `You are a job application assistant.
-                    Analyze the candidate CV against the job description.
-                    Return JSON with exactly these fields:
-                    matchScore: number from 0 to 100
-                    strengths: array of strings
-                    missingSkills: array of strings
-                    recommendation: string`
-            },
-            { 
-                role: "user",
-              content: `CV: ${cv}\nJob Description: ${jobDescription}`
-             }
-        ],
-        model: "openai/gpt-oss-20b",
-        response_format: {
-            type: "json_object"
-        }
-    });
-
-    if (!response || !response.choices || response.choices.length === 0) {
-        return res.status(500).json({ error: "Failed to get a response from the AI model" });
-    }
-    const result = JSON.parse(response.choices[0].message.content);
-    res.json(result);
-} catch (error) {
-    console.error("Error occurred while processing AI request:", error);
-    return res.status(500).json({ error: "An error occurred while processing the AI request" });
-}
 
 
 app.get('/api/ai/models', async (req, res) => {
