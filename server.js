@@ -1,4 +1,5 @@
 require("dotenv").config();
+const {db} = require("./database/db");
 const express = require('express');
 const app = express();
 app.use(express.json());
@@ -6,10 +7,10 @@ const cors = require('cors');
 app.use(cors());
 const port = process.env.PORT || 3000;
 
+
 const aiRoutes = require('./routes/aiRoutes');
 
 app.use('/api/ai', aiRoutes);
-
 
 
 
@@ -20,15 +21,7 @@ app.get('/api/ai/models', async (req, res) => {
 });
 
 
-const Database = require('better-sqlite3');
-const db = new Database('users.db');
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL
-);
-`);
 
 
 
