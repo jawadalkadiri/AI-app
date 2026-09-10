@@ -4,14 +4,14 @@ const aiService = require("../services/aiService");
 const analysisRepository = require("../database/analysisRepository");
 
 router.post("/analyze" , async (req, res) => {
-    const { cv, jobDescription } = req.body;
-    if (!cv || !jobDescription) {
-        return res.status(400).json({ error: "CV and job description are required" });
+    const { cv, jobDescription, companyName, position } = req.body;
+    if (!cv || !jobDescription || !companyName || !position) {
+        return res.status(400).json({ error: "All fields are required" });
     }
 
     try {
         const result = await aiService.analyzeJob(cv, jobDescription);
-        analysisRepository.saveAnalysis(cv, jobDescription, result);
+        analysisRepository.saveAnalysis(cv, jobDescription, result, companyName, position);
         res.json(result);
     } catch (error) {
         console.error("Error occurred while analyzing job:", error);
@@ -20,6 +20,14 @@ router.post("/analyze" , async (req, res) => {
 })
 
 router.get("/analytics", (req, res) => {
+    const companyName = req.query.companyName;
+    if (companyName) {
+        const filteredAnalyses = analysisRepository.getAnalysesByCompany(companyName);
+        return res.json(filteredAnalyses);
+    }
+    if (!companyName) {
+        return res.status(400).json({ error: "companyName query parameter is required or company not found" });
+    }
     const analyses = analysisRepository.getAllAnalyses();
     res.json(analyses);
 });

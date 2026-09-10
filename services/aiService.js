@@ -31,7 +31,17 @@ async function analyzeJob(cv, jobDescription) {
     if (!response || !response.choices || response.choices.length === 0) {
         throw new Error("Failed to get a response from the AI model");
     }
-    return JSON.parse(response.choices[0].message.content);
+    const result = JSON.parse(response.choices[0].message.content);
+    if(result.matchScore === undefined || !result.strengths || !result.missingSkills || !result.recommendation) {
+        throw new Error("Invalid response format from the AI model");
+    }
+    else if(typeof result.matchScore !== 'number' || !Array.isArray(result.strengths) || !Array.isArray(result.missingSkills) || typeof result.recommendation !== 'string') {
+        throw new Error("Invalid data types in the response from the AI model");
+    }
+    else if(result.matchScore < 0 || result.matchScore > 100) {
+        throw new Error("matchScore is out of the expected range (0-100)");
+    }
+    return result;
 }
 
 module.exports = {
