@@ -1,10 +1,12 @@
 const { db } = require("./db");
 
-function saveAnalysis(cv, jobDescription, analysisResult) {
-    const { matchScore, strengths, missingSkills, recommendation } = analysisResult;
+function saveAnalysis(cv, jobDescription, analysisResult, companyName, position) {
+    const { matchScore, strengths, missingSkills, recommendation, weakSkills, skills } = analysisResult;
     const missingSkillsString = JSON.stringify(missingSkills);
     const strengthsString = JSON.stringify(strengths);
-    db.prepare('INSERT INTO analytics (cv, jobDescription, matchScore, strengths, missingSkills, recommendation) VALUES (?, ?, ?, ?, ?, ?)').run(cv, jobDescription, matchScore, strengthsString, missingSkillsString, recommendation);
+    const weakSkillsString = JSON.stringify(weakSkills);
+    const skillsString = JSON.stringify(skills);
+    db.prepare('INSERT INTO analytics (cv, jobDescription, matchScore, strengths, missingSkills, recommendation, companyName, position, weakSkills, skills) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(cv, jobDescription, matchScore, strengthsString, missingSkillsString, recommendation, companyName, position, weakSkillsString, skillsString);
 }
 
 function getAllAnalyses() {
@@ -12,6 +14,8 @@ function getAllAnalyses() {
     analyses.forEach(analysis => {
         analysis.strengths = JSON.parse(analysis.strengths);
         analysis.missingSkills = JSON.parse(analysis.missingSkills);
+        analysis.weakSkills =analysis.weakSkills ? JSON.parse(analysis.weakSkills) : [];
+        analysis.skills =analysis.skills ? JSON.parse(analysis.skills) : [];
     });
     return analyses;
 }
@@ -21,8 +25,21 @@ function getAnalysisById(id) {
     if (analysis) {
         analysis.strengths = JSON.parse(analysis.strengths);
         analysis.missingSkills = JSON.parse(analysis.missingSkills);
+        analysis.weakSkills =analysis.weakSkills ? JSON.parse(analysis.weakSkills) : [];
+        analysis.skills =analysis.skills ? JSON.parse(analysis.skills) : [];
     }
     return analysis;
+}
+
+function getAnalysesByCompany(companyName) {
+    const analyses = db.prepare('SELECT * FROM analytics WHERE companyName LIKE ?').all(`%${companyName}%`);
+    analyses.forEach(analysis => {
+        analysis.strengths = JSON.parse(analysis.strengths);
+        analysis.missingSkills = JSON.parse(analysis.missingSkills);
+        analysis.weakSkills = analysis.weakSkills ? JSON.parse(analysis.weakSkills) : [];
+        analysis.skills =analysis.skills ? JSON.parse(analysis.skills) : [];
+    });
+    return analyses;
 }
 
 function deleteAnalysisById(id) {
@@ -34,5 +51,6 @@ module.exports = {
     saveAnalysis,
     getAllAnalyses,
     getAnalysisById,
+    getAnalysesByCompany,
     deleteAnalysisById
 };

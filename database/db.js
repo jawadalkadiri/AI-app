@@ -16,20 +16,6 @@ db.exec(`
     )
 `);
 
-const appliedMigrations = db.prepare('SELECT name FROM migrations').all().map(row => row.name);
-
-const migration = db.transaction(() => {
-    if (!appliedMigrations.includes('add_company_and_position_to_analytics')) {
-        db.exec(`
-            ALTER TABLE analytics ADD COLUMN companyName TEXT;
-            ALTER TABLE analytics ADD COLUMN position TEXT;
-        `);
-        db.prepare('INSERT INTO migrations (name) VALUES (?)').run('add_company_and_position_to_analytics');
-    }
-});
-
-migration();
-
 db.exec(`
     CREATE TABLE IF NOT EXISTS analytics (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,5 +28,31 @@ db.exec(`
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
 `);
+
+const appliedMigrations = db.prepare('SELECT name FROM migrations').all().map(row => row.name);
+
+const migration = db.transaction(() => {
+    if (!appliedMigrations.includes('add_company_and_position_to_analytics')) {
+        db.exec(`
+            ALTER TABLE analytics ADD COLUMN companyName TEXT;
+            ALTER TABLE analytics ADD COLUMN position TEXT;
+        `);
+        db.prepare('INSERT INTO migrations (name) VALUES (?)').run('add_company_and_position_to_analytics');
+    }
+});
+
+const migration2 = db.transaction(() => {
+    if (!appliedMigrations.includes('add_weakSkills_and_skills_to_analytics')) {
+        db.exec(`
+            ALTER TABLE analytics ADD COLUMN weakSkills TEXT;
+            ALTER TABLE analytics ADD COLUMN skills TEXT;
+        `);
+        db.prepare('INSERT INTO migrations (name) VALUES (?)').run('add_weakSkills_and_skills_to_analytics');
+    }
+});
+
+migration();
+migration2();
+
 
 module.exports = {db};
